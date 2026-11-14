@@ -1,0 +1,31 @@
+# Render Blueprint — PhotoMarket (bitta Docker servis: backend + tayyor frontend)
+services:
+  - type: web
+    name: photomarket
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+    envVars:
+      - key: APP_NAME
+        value: PhotoMarket
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL        # Supabase: Connect -> Session pooler manzili (parol bilan)
+        sync: false
+      - key: FRONTEND_URL        # masalan https://photomarket.onrender.com
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: SUPABASE_URL        # https://xxxx.supabase.co
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: SUPABASE_BUCKET
+        value: uploads
+      - key: MAIL_SCRIPT_URL     # Google Apps Script veb-ilova manzili
+        sync: false
+      - key: MAIL_SCRIPT_KEY
+        sync: false

@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.venv/
+__pycache__/
+*.pyc
+.env
+*.db
+backend/data/
+backend/uploads/
+.pytest_cache/
+backend/.image_cache/
