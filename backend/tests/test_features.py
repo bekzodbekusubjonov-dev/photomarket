@@ -182,3 +182,18 @@ def test_ads_reports_impersonation_nearest(client):
     # eng yaqin ijodkor
     r = client.get("/api/creators", params={"sort": "nearest", "lat": 39.6, "lng": 66.9}).json()
     assert r["items"][0]["distance_km"] is not None and r["items"][0]["city"] == "Samarqand"
+
+
+def test_admin_reset_password(client, codes):
+    ah = _admin(client)
+    register_and_verify(client, "reset-u@example.com", role="client", name="Reset User")
+    users = client.get("/api/admin/users", headers=ah, params={"q": "reset-u@example.com"}).json()["items"]
+    uid = users[0]["id"]
+    r = client.post(f"/api/admin/users/{uid}/reset-password", headers=ah)
+    assert r.status_code == 200, r.text
+    pw = r.json()["password"]
+    assert len(pw) >= 10
+    ok = client.post("/api/auth/login", json={"email": "reset-u@example.com", "password": pw})
+    assert ok.status_code == 200
+    old = client.post("/api/auth/login", json={"email": "reset-u@example.com", "password": "Parol123"})
+    assert old.status_code == 401

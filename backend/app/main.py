@@ -72,8 +72,12 @@ async def lifespan(_app: FastAPI):
         from .cli import create_admin
         create_admin(settings.admin_email, settings.admin_password, "Administrator")
     if settings.seed_demo:
-        from .cli import seed_demo
-        seed_demo()
+        try:
+            from .cli import seed_demo
+            seed_demo()
+            log.warning("SEED_DEMO: demo ma'lumotlar tayyor.")
+        except Exception:  # demo xatosi saytni to'xtatmasin
+            log.exception("SEED_DEMO xatosi (sayt ishlashda davom etadi)")
     if settings.jwt_secret.startswith("dev-only") or settings.jwt_secret.startswith("replace-this"):
         log.warning("JWT_SECRET standart qiymatda! Ishlab chiqarishda albatta o'zgartiring.")
     yield

@@ -202,4 +202,10 @@ export const ru_extra: Record<string, string> = {
   "Bekor qilingan": "Отменён",
   "Bekor (imzosiz)": "Отменён (без подписи)",
   "Buyurtma — shartnoma va chek bilan": "Заказ — с договором и чеком",
+  "{name} uchun yangi vaqtinchalik parol yaratilsinmi? Eski parol ishlamay qoladi.": "Создать новый временный пароль для {name}? Старый пароль перестанет работать.",
+  "Parol": "Пароль",
+  "Parollar shifrlangan saqlanadi": "Пароли хранятся в зашифрованном виде",
+  "Yangi parol": "Новый пароль",
+  "Parol faqat hozir ko'rsatiladi. Uni foydalanuvchiga yuboring; u kirgach Sozlamalarda o'zgartirishi mumkin. Parollar xavfsizlik uchun shifrlangan saqlanadi, asl matnini ko'rib bo'lmaydi.": "Пароль показывается только сейчас. Отправьте его пользователю; после входа он сможет сменить его в настройках. Пароли хранятся в зашифрованном виде, исходный текст посмотреть нельзя.",
+  "Tayyor": "Готово",
 };

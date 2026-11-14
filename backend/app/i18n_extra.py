@@ -1,5 +1,6 @@
 """Yangi modullar (shartnoma, karta, chek, e'lon, kuzatuv) uchun backend tarjimalari: uz kalit -> (ru, en)."""
 M2 = {
+    "O'z parolingizni Sozlamalar bo'limida o'zgartiring": ("Свой пароль измените в разделе «Настройки»", "Change your own password in Settings"),
     "Shartnoma {num} tayyor — imzolang": ("Договор {num} готов — подпишите", "Agreement {num} is ready — please sign"),
     "«{title}» buyurtmasi uchun elektron shartnoma yaratildi": ("Для заказа «{title}» создан электронный договор", "An electronic agreement was created for “{title}”"),
     "Shartnoma {num} imzolandi ✓": ("Договор {num} подписан ✓", "Agreement {num} signed ✓"),

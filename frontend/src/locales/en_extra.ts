@@ -200,4 +200,10 @@ export const en_extra: Record<string, string> = {
   "Bekor qilingan": "Cancelled",
   "Bekor (imzosiz)": "Cancelled (unsigned)",
   "Buyurtma — shartnoma va chek bilan": "Booking — with agreement & receipt",
+  "{name} uchun yangi vaqtinchalik parol yaratilsinmi? Eski parol ishlamay qoladi.": "Create a new temporary password for {name}? The old password will stop working.",
+  "Parol": "Password",
+  "Parollar shifrlangan saqlanadi": "Passwords are stored encrypted",
+  "Yangi parol": "New password",
+  "Parol faqat hozir ko'rsatiladi. Uni foydalanuvchiga yuboring; u kirgach Sozlamalarda o'zgartirishi mumkin. Parollar xavfsizlik uchun shifrlangan saqlanadi, asl matnini ko'rib bo'lmaydi.": "The password is shown only now. Send it to the user; they can change it in Settings after logging in. Passwords are stored encrypted, the original text cannot be viewed.",
+  "Tayyor": "Done",
 };

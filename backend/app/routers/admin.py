@@ -4,11 +4,15 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
+import secrets
+import string
+
 from ..database import get_db
 from ..deps import require_admin
 from ..models import (
     Booking, CreatorProfile, Message, Review, User, ROLE_ADMIN, ROLE_CREATOR, ST_COMPLETED, utcnow,
 )
+from ..security import hash_password
 from ..schemas import AdminCreatorPatch, AdminUserPatch
 from ..services import STATUS_LABELS, creator_card, notify, recalc_creator_rating, review_out, user_private
 from .dashboard import monthly_series
@@ -100,6 +104,24 @@ def admin_patch_user(user_id: int, data: AdminUserPatch, admin: User = Depends(r
     db.commit()
     db.refresh(u)
     return user_private(u)
+
+
+@router.post("/users/{user_id}/reset-password")
+def admin_reset_password(user_id: int, admin: User = Depends(require_admin), db: Session = Depends(get_db)):
+    """Parollar xeshlangan saqlanadi (ko'rib bo'lmaydi). Admin yangi vaqtinchalik parol yaratadi va uni bir marta ko'radi."""
+    u = db.get(User, user_id)
+    if not u:
+        raise HTTPException(404, "Foydalanuvchi topilmadi")
+    if u.id == admin.id:
+        raise HTTPException(400, "O'z parolingizni Sozlamalar bo'limida o'zgartiring")
+    alphabet = string.ascii_letters + string.digits
+    pw = "".join(secrets.choice(alphabet) for _ in range(10))
+    if not any(c.isdigit() for c in pw):
+        pw = pw[:-1] + secrets.choice(string.digits)
+    u.password_hash = hash_password(pw)
+    u.token_version += 1
+    db.commit()
+    return {"password": pw, "email": u.email}
 
 
 @router.get("/creators")

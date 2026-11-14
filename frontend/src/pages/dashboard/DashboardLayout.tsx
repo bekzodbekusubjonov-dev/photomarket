@@ -1,10 +1,12 @@
+import { useEffect, useState } from "react";
 import { Navigate, NavLink, Outlet, useLocation } from "react-router-dom";
 import {
-  BarChart3, Bell, CalendarDays, Camera, ClipboardList, CreditCard, Heart, Images, LayoutDashboard, MessageCircle, Package, Search,
+  BarChart3, Bell, Home, CalendarDays, Camera, ClipboardList, CreditCard, Heart, Images, LayoutDashboard, MessageCircle, Package, Search,
   FileSignature, Megaphone, PieChart, Settings, ShieldAlert, ShieldCheck, SlidersHorizontal, Star, Tags, UserCircle, Users, Wallet,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useAuth } from "../../auth";
+import { ColResize } from "../../components/ColResize";
 import { ViewAsBanner } from "../../components/ViewAs";
 import { BottomNav, Header } from "../../components/Layout";
 import { Spinner } from "../../components/ui";
@@ -26,6 +28,13 @@ export function RequireAuth({ roles, children }: { roles?: Role[]; children: Rea
 export default function DashboardLayout() {
   const { user } = useAuth();
   const { counts } = useUnread();
+  const loc = useLocation();
+  const [open, setOpen] = useState(false);
+  useEffect(() => { setOpen(false); }, [loc.pathname]);
+  useEffect(() => {
+    document.body.classList.toggle("drawer-open", open);
+    return () => document.body.classList.remove("drawer-open");
+  }, [open]);
   if (!user) return null;
   const common: Item[] = [
     { to: "/dashboard", label: t("Umumiy ko'rinish"), icon: <LayoutDashboard size={18} />, end: true },
@@ -76,9 +85,15 @@ export default function DashboardLayout() {
   return (
     <>
       <ViewAsBanner />
-      <Header />
-      <div className="dash">
-        <aside className="dash-side">
+      <Header drawer={{ open, toggle: () => setOpen((o) => !o) }} />
+      <ColResize />
+      <div className={`dash ${open ? "drawer-on" : ""}`}>
+        <div className="dash-scrim" onClick={() => setOpen(false)} />
+        <aside className="dash-side" aria-label={t("Menyu")}>
+          <div className="side-public">
+            <NavLink to="/" end className="side-link"><Home size={18} /><span>{t("Bosh sahifa")}</span></NavLink>
+            <NavLink to="/creators" end className="side-link"><Search size={18} /><span>{t("Ijodkorlar")}</span></NavLink>
+          </div>
           {groups.map(([title, items]) => (
             <div key={title} className="side-group">
               <span className="side-title">{title}</span>

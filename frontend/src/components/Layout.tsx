@@ -51,7 +51,7 @@ function UserMenu() {
   );
 }
 
-export function Header() {
+export function Header({ drawer }: { drawer?: { open: boolean; toggle: () => void } } = {}) {
   const { user } = useAuth();
   const { counts } = useUnread();
   const [mobile, setMobile] = useState(false);
@@ -60,6 +60,11 @@ export function Header() {
   return (
     <header className="header">
       <div className="container header-inner">
+        {drawer && (
+          <button className="icon-btn drawer-btn" onClick={drawer.toggle} aria-label={t("Menyu")} aria-expanded={drawer.open}>
+            {drawer.open ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        )}
         <Logo />
         <nav className={cx("main-nav", mobile && "open")}>
           <NavLink to="/" end>{t("Bosh sahifa")}</NavLink>
@@ -90,7 +95,7 @@ export function Header() {
               <Link to="/register" className="btn btn-primary btn-md">{t("Ro'yxatdan o'tish")}</Link>
             </>
           )}
-          <button className="icon-btn burger" onClick={() => setMobile((m) => !m)} aria-label={t("Menyu")}>
+          <button className={cx("icon-btn burger", drawer && "no-drawer-burger")} onClick={() => setMobile((m) => !m)} aria-label={t("Menyu")}>
             {mobile ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>

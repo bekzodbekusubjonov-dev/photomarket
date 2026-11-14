@@ -29,6 +29,8 @@ services:
         sync: false
       - key: ADMIN_PASSWORD      # kamida 8 belgi
         sync: false
+      - key: SEED_DEMO           # 1 = demo hisoblar va ma'lumotlar (real ishga tushirishdan oldin 0 qiling va remove-demo)
+        sync: false
       - key: MAIL_SCRIPT_URL     # Google Apps Script veb-ilova manzili
         sync: false
       - key: MAIL_SCRIPT_KEY

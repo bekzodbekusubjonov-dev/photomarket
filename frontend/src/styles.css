@@ -633,10 +633,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
   .profile-head { grid-template-columns: auto 1fr; }
   .profile-cta { grid-column: 1 / -1; }
   .dash { grid-template-columns: 1fr; }
-  .dash-side { position: static; height: auto; display: flex; gap: 6px; overflow-x: auto; padding: 10px 14px; border-right: 0; border-bottom: 1px solid var(--line); background: var(--surface); }
-  .side-group { flex-direction: row; margin: 0; gap: 4px; }
-  .side-title { display: none; }
-  .side-link { white-space: nowrap; padding: 8px 12px; }
   .dash-main { padding: 22px 16px 50px; }
   .auth { grid-template-columns: 1fr; }
   .auth-side { display: none; }
@@ -1165,3 +1161,70 @@ button.chip:hover { border-color: var(--accent); }
   .rc-paper { animation: none !important; }
   .contract-doc::before { display: none; }
 }
+
+
+/* ===== Telefon: chapdan chiqadigan menyu paneli ===== */
+.drawer-btn, .dash-scrim, .side-public { display: none; }
+.col-grip { position: absolute; right: 0; top: 0; bottom: 0; width: 10px; cursor: col-resize; touch-action: none; z-index: 2; }
+.col-grip::after { content: ""; position: absolute; right: 3px; top: 25%; bottom: 25%; width: 2px; border-radius: 2px; background: var(--line-2); }
+.col-grip:hover::after, .rs-drag .col-grip::after { background: var(--accent); }
+.table th { position: relative; }
+.rs-drag { user-select: none; }
+.table td.user-cell { min-width: 230px; }
+.table td.user-cell .muted { overflow-wrap: anywhere; word-break: break-word; }
+.table[style*="fixed"] td, .table[style*="fixed"] th { overflow-wrap: anywhere; }
+@media (max-width: 900px) {
+  .drawer-btn { display: inline-grid; order: -1; margin-left: -6px; }
+  .no-drawer-burger { display: none !important; }
+  .dash-side { position: fixed; z-index: 120; top: 0; bottom: 0; left: 0; height: 100dvh; width: min(300px, 86vw); background: #fff;
+    padding: 18px 14px calc(90px + env(safe-area-inset-bottom)); overflow-y: auto; border-right: 1px solid var(--line);
+    transform: translateX(-102%); transition: transform .25s ease; box-shadow: none; }
+  .dash.drawer-on .dash-side { transform: translateX(0); box-shadow: 14px 0 40px -10px rgba(31, 27, 46, .35); }
+  .dash-scrim { display: block; position: fixed; inset: 0; z-index: 110; background: rgba(31, 27, 46, .45); opacity: 0; pointer-events: none; transition: opacity .2s; }
+  .dash.drawer-on .dash-scrim { opacity: 1; pointer-events: auto; }
+  .side-public { display: grid; gap: 2px; padding-bottom: 10px; margin-bottom: 8px; border-bottom: 1px solid var(--line); }
+  .side-group { display: grid; gap: 2px; margin: 0 0 12px; }
+  .side-title { display: block; }
+  .side-link { white-space: normal; padding: 11px 12px; }
+  body.drawer-open { overflow: hidden; }
+  .viewas-bar { position: relative; }
+}
+.pw-cell { display: grid; gap: 4px; justify-items: start; }
+.pw-demo { display: inline-flex; align-items: center; gap: 6px; }
+.pw-demo code { background: var(--surface-2); padding: 3px 8px; border-radius: 6px; }
+.mini-eye { border: 0; background: transparent; color: var(--muted); cursor: pointer; padding: 4px; border-radius: 6px; }
+.mini-eye:hover { color: var(--accent-ink); background: var(--accent-soft); }
+
+/* ===== Telefon: jadvallar kartochka ko'rinishida ===== */
+@media (max-width: 640px) {
+  .table-wrap { overflow: visible; background: transparent; border: 0; box-shadow: none; }
+  .table-wrap.card { background: transparent; border: 0; box-shadow: none; }
+  .table { min-width: 0 !important; width: 100% !important; table-layout: auto !important; display: block; }
+  .table thead { display: none; }
+  .table tbody { display: grid; gap: 10px; }
+  .table tr { display: block; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px; box-shadow: var(--shadow); }
+  .table td { display: flex !important; justify-content: space-between; align-items: center; gap: 12px; width: auto !important; padding: 7px 0 !important; border: 0 !important; text-align: right; min-width: 0 !important; overflow-wrap: anywhere; }
+  .table td + td { border-top: 1px dashed var(--line) !important; }
+  .table td::before { content: attr(data-label); flex: none; max-width: 42%; color: var(--muted); font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; text-align: left; }
+  .table td[data-label=""]::before { display: none; }
+  .table td.user-cell { text-align: left; }
+  .table td.user-cell::before { display: none; }
+  .table td.user-cell > div { min-width: 0; }
+  .table td .btn, .table td select { max-width: 100%; }
+  .table td.actions-cell, .table td.nowrap:last-child { justify-content: flex-start; flex-wrap: wrap; }
+  .table td.nowrap { white-space: normal; }
+  .col-grip { display: none; }
+}
+@media (max-width: 640px) { .pw-cell { justify-items: end; } .table td:last-child:empty { display: none !important; } }
+@media (max-width: 420px) {
+  .header-inner { gap: 6px !important; }
+  .header-actions { gap: 6px; }
+  .header-actions .btn-md { padding: 0 12px; font-size: 13px; height: 38px; }
+  .brand-word, .logo span { font-size: 17px; }
+  .install-chip, .lang-btn { width: 36px; height: 36px; }
+}
+@media (max-width: 330px) { .install-chip { display: none; } }
+.date-field { min-height: 48px; max-height: 56px; }
+.date-field { height: 48px; box-sizing: border-box; }
+.date-field { height: 48px !important; min-height: 48px !important; max-height: 48px !important; padding-top: 0 !important; padding-bottom: 0 !important; }
+@media (max-width: 400px) { .header-inner .logo > span { display: none; } }
