@@ -1217,3 +1217,6 @@ button.chip:hover { border-color: var(--accent); }
 @media (max-width: 400px) { .header-inner .logo > span { display: none; } }
 .table td.user-cell .muted { white-space: nowrap; overflow-wrap: normal; word-break: normal; }
 .table td.user-cell { min-width: 300px; }
+/* jadval konteyneri: .card.flush overflow:hidden qilib qo'yardi — surishga to'sqinlik qilardi */
+.table-wrap, .table-wrap.card, .table-wrap.card.flush { overflow-x: auto !important; overflow-y: visible; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; }
+.table-wrap.card.flush .table { border-radius: 0; }
