@@ -12,9 +12,9 @@ from ..database import get_db
 from ..deps import get_current_user, get_optional_user, require_admin, require_creator, require_roles
 from ..i18n import current_lang
 from ..models import (
-    COMPLAINT_STATUSES, PAY_METHODS, PAY_PAID, PAY_PENDING, PAY_REJECTED, ROLE_ADMIN, ROLE_CLIENT, ROLE_CREATOR,
-    ST_ACCEPTED, ST_COMPLETED, Booking, Category, Complaint, CreatorProfile, Favorite, Payment, Review, Setting, User,
-    utcnow,
+    COMPLAINT_STATUSES, CONTRACT_SIGNED, Contract, PAY_METHODS, PAY_PAID, PAY_PENDING, PAY_REJECTED, ROLE_ADMIN, ROLE_CLIENT, ROLE_CREATOR,
+    ST_ACCEPTED, ST_COMPLETED, Booking, Category, Complaint, CreatorProfile, Favorite, Payment, Review, SavedCard, Setting,
+    User, utcnow,
 )
 from ..services import booking_out, creator_card, notify, review_out, user_public
 from .dashboard import monthly_series
@@ -35,9 +35,12 @@ DEFAULT_CATEGORIES = [  # name_uz ijodkor mutaxassisliklari (SPECIALTIES) bilan 
 ]
 DEFAULT_SETTINGS = {
     "platform_name": "PhotoMarket", "contact_email": "", "contact_phone": "", "telegram": "",
-    "commission_percent": "0", "allow_registration": "1", "terms_text": "",
+    "commission_percent": "10", "allow_registration": "1", "terms_text": "",
+    "cancel_free_days": "3", "cancel_fee_percent": "30", "cancel_platform_share": "40",
+    "pay_card_number": "", "pay_card_holder": "", "logo_url": "",
 }
-PUBLIC_SETTINGS = ("platform_name", "contact_email", "contact_phone", "telegram", "terms_text")
+PUBLIC_SETTINGS = ("platform_name", "contact_email", "contact_phone", "telegram", "terms_text", "logo_url",
+                   "commission_percent", "cancel_free_days", "cancel_fee_percent", "cancel_platform_share")
 
 
 def seed_defaults(db: Session):
@@ -132,13 +135,24 @@ class PaymentIn(BaseModel):
     amount: int = Field(gt=0, le=2_000_000_000)
     method: Literal["cash", "card", "transfer"] = "cash"
     note: str = Field(default="", max_length=300)
+    proof_url: str = Field(default="", max_length=500)
+    card_id: int | None = None
 
 
 def pay_out(p: Payment) -> dict:
     b = p.booking
+    card = None
+    if p.card_id:
+        from sqlalchemy.orm import object_session
+        from ..models import SavedCard
+        s = object_session(p)
+        c = s.get(SavedCard, p.card_id) if s else None
+        card = f"{c.first4} **** **** {c.last4}" if c else None
     return {"id": p.id, "booking_id": p.booking_id, "booking_title": b.title if b else "", "amount": p.amount,
             "method": p.method, "status": p.status, "note": p.note, "created_at": p.created_at,
-            "confirmed_at": p.confirmed_at,
+            "confirmed_at": p.confirmed_at, "proof_url": p.proof_url, "receipt_no": p.receipt_no, "fee": p.fee,
+            "creator_amount": p.creator_amount, "payout_status": p.payout_status, "admin_note": p.admin_note,
+            "card": card,
             "client": user_public(b.client) if b else None,
             "creator_name": b.creator.display_name if b and b.creator else ""}
 
@@ -178,14 +192,36 @@ def add_payment(data: PaymentIn, background: BackgroundTasks, user: User = Depen
         raise HTTPException(404, "Buyurtma topilmadi")
     if b.status not in (ST_ACCEPTED, ST_COMPLETED):
         raise HTTPException(400, "To'lovni faqat qabul qilingan yoki bajarilgan buyurtmaga qo'shish mumkin")
-    # ijodkor o'zi kiritsa darhol tasdiqlangan hisoblanadi (u pulni olganini o'zi biladi)
+    online = data.method in ("card", "transfer")
+    if is_client and online:
+        con = db.scalar(select(Contract).where(Contract.booking_id == b.id))
+        if not con or con.status != CONTRACT_SIGNED:
+            raise HTTPException(400, "Avval shartnomani imzolang: to'lov imzolangan shartnomadan keyin qabul qilinadi")
+        if not data.proof_url:
+            raise HTTPException(400, "To'lov chekini (skrinshot) yuklang")
+    if data.card_id and not db.scalar(select(SavedCard.id).where(SavedCard.id == data.card_id,
+                                                                SavedCard.user_id == user.id)):
+        raise HTTPException(404, "Karta topilmadi")
+    # naqd to'lovni ijodkor kiritsa darhol tasdiqlangan; karta/o'tkazma — administrator tasdiqlaydi
+    auto_paid = is_creator and not online
     p = Payment(booking_id=b.id, payer_id=b.client_id, creator_id=b.creator_id, amount=data.amount,
-                method=data.method, note=data.note.strip(), created_by=user.id,
-                status=PAY_PAID if is_creator else PAY_PENDING, confirmed_at=utcnow() if is_creator else None)
+                method=data.method, note=data.note.strip(), created_by=user.id, proof_url=data.proof_url,
+                card_id=data.card_id if is_client else None,
+                status=PAY_PAID if auto_paid else PAY_PENDING, confirmed_at=utcnow() if auto_paid else None)
     db.add(p)
-    other = b.creator.user if is_client else b.client
-    notify(db, other, "payment_new", f"Yangi to'lov: {data.amount:,} so'm".replace(",", " "),
-           f"«{b.title}» buyurtmasi bo'yicha", "/dashboard/payments", background)
+    db.flush()
+    amount_s = f"{data.amount:,}".replace(",", " ")
+    if auto_paid:
+        from .features import confirm_payment
+        confirm_payment(db, p, PAY_PAID, "", user, background)
+    elif online:
+        for adm in db.scalars(select(User).where(User.role == ROLE_ADMIN, User.is_active.is_(True))):
+            notify(db, adm, "payment_review", f"To'lovni tasdiqlang: {amount_s} so'm",
+                   f"«{b.title}» buyurtmasi bo'yicha chek yuklandi", "/dashboard/payments", background)
+    else:
+        other = b.creator.user if is_client else b.client
+        notify(db, other, "payment_new", f"Yangi to'lov: {amount_s} so'm", f"«{b.title}» buyurtmasi bo'yicha",
+               "/dashboard/payments", background)
     db.commit()
     db.refresh(p)
     return pay_out(p)
@@ -203,11 +239,10 @@ def decide_payment(pid: int, data: PaymentDecision, background: BackgroundTasks,
         raise HTTPException(404, "To'lov topilmadi")
     if p.status != PAY_PENDING:
         raise HTTPException(409, "Bu to'lov allaqachon ko'rib chiqilgan")
-    p.status = data.status
-    p.confirmed_at = utcnow()
-    key = "To'lov tasdiqlandi: {a} so'm" if data.status == PAY_PAID else "To'lov rad etildi: {a} so'm"
-    notify(db, p.booking.client, "payment_" + data.status, key.format(a=f"{p.amount:,}".replace(",", " ")),
-           f"«{p.booking.title}» buyurtmasi bo'yicha", "/dashboard/payments", background)
+    if p.method in ("card", "transfer"):
+        raise HTTPException(403, "Karta va o'tkazma to'lovlarini administrator tasdiqlaydi")
+    from .features import confirm_payment
+    confirm_payment(db, p, data.status, "", user, background)
     db.commit()
     return pay_out(p)
 
@@ -399,9 +434,15 @@ class SettingsIn(BaseModel):
     contact_email: str = Field(default="", max_length=120)
     contact_phone: str = Field(default="", max_length=40)
     telegram: str = Field(default="", max_length=80)
-    commission_percent: int = Field(default=0, ge=0, le=50)
+    commission_percent: int = Field(default=10, ge=0, le=50)
     allow_registration: bool = True
     terms_text: str = Field(default="", max_length=5000)
+    cancel_free_days: int = Field(default=3, ge=0, le=60)
+    cancel_fee_percent: int = Field(default=30, ge=0, le=100)
+    cancel_platform_share: int = Field(default=40, ge=0, le=100)
+    pay_card_number: str = Field(default="", max_length=24, pattern=r"^[0-9 ]*$")
+    pay_card_holder: str = Field(default="", max_length=80)
+    logo_url: str = Field(default="", max_length=500)
 
 
 @admin.put("/settings")

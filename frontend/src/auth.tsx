@@ -10,6 +10,9 @@ interface AuthCtx {
   setSession: (r: TokenResponse) => void;
   setUser: (u: User) => void;
   logout: () => void;
+  viewingAs: boolean;
+  startViewAs: (r: TokenResponse) => void;
+  exitViewAs: () => void;
   refresh: () => Promise<void>;
 }
 
@@ -19,10 +22,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const ADMIN_KEY = "pm_admin_token";
+  const [viewingAs, setViewingAs] = useState(() => { try { return !!localStorage.getItem(ADMIN_KEY); } catch { return false; } });
+  const exitViewAs = useCallback(() => {
+    let adm: string | null = null;
+    try { adm = localStorage.getItem(ADMIN_KEY); localStorage.removeItem(ADMIN_KEY); } catch { /* */ }
+    tokenStore.set(adm);
+    setViewingAs(false);
+    window.location.assign("/dashboard");
+  }, []);
+  const startViewAs = useCallback((r: TokenResponse) => {
+    try { const cur = tokenStore.get(); if (cur && !localStorage.getItem(ADMIN_KEY)) localStorage.setItem(ADMIN_KEY, cur); } catch { /* */ }
+    tokenStore.set(r.access_token);
+    window.location.assign("/dashboard");
+  }, []);
   const logout = useCallback(() => {
+    if (viewingAs) { exitViewAs(); return; }
     tokenStore.set(null);
     setUser(null);
-  }, []);
+  }, [viewingAs, exitViewAs]);
 
   const refresh = useCallback(async () => {
     if (!tokenStore.get()) { setUser(null); return; }
@@ -39,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(r.user);
   }, []);
 
-  return <Ctx.Provider value={{ user, loading, setSession, setUser, logout, refresh }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ user, loading, setSession, setUser, logout, refresh, viewingAs, startViewAs, exitViewAs }}>{children}</Ctx.Provider>;
 }
 
 export const useAuth = () => useContext(Ctx);

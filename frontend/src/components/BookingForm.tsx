@@ -4,6 +4,7 @@ import { CalendarCheck } from "lucide-react";
 import { api } from "../api";
 import type { Booking, Service } from "../types";
 import { fmtDate, fmtMoney, todayISO } from "../utils";
+import { LocationPicker } from "./Map";
 import { Alert, Avatar, Button, Field, DateField, Input, Modal, Select, Textarea, useToast } from "./ui";
 import { t } from "../i18n";
 
@@ -28,6 +29,7 @@ export function BookingForm({ open, onClose, creatorId, creatorName, creatorAvat
   const [f, setF] = useState({
     service_id: "", title: "", event_date: "", start_time: "", duration_hours: "2", location: "", details: "", price: "",
   });
+  const [pos, setPos] = useState<{ lat: number | null; lng: number | null }>({ lat: null, lng: null });
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [avail, setAvail] = useState<Avail | null>(null);
@@ -41,6 +43,7 @@ export function BookingForm({ open, onClose, creatorId, creatorName, creatorAvat
         event_date: existing.event_date, start_time: existing.start_time, duration_hours: String(existing.duration_hours),
         location: existing.location, details: existing.details || "", price: existing.price ? String(existing.price) : "",
       });
+      setPos({ lat: existing.lat ?? null, lng: existing.lng ?? null });
     } else {
       const s = services.find((x) => x.id === preService);
       setF((o) => ({ ...o, service_id: s ? String(s.id) : "", title: s ? s.title : o.title,
@@ -69,7 +72,7 @@ export function BookingForm({ open, onClose, creatorId, creatorName, creatorAvat
     setBusy(true);
     const body = {
       title: f.title, event_date: f.event_date, start_time: f.start_time, duration_hours: Number(f.duration_hours) || 1,
-      location: f.location, details: f.details, price: svc ? null : f.price ? Number(f.price) : null,
+      location: f.location, details: f.details, price: svc ? null : f.price ? Number(f.price) : null, lat: pos.lat, lng: pos.lng,
     };
     try {
       const b = existing
@@ -127,6 +130,7 @@ export function BookingForm({ open, onClose, creatorId, creatorName, creatorAvat
         <Field label={t("Manzil")} className="span-2">
           <Input value={f.location} onChange={set("location")} required minLength={2} placeholder={t("Shahar, tuman, to'yxona / joy nomi")} />
         </Field>
+        <div className="span-2"><LocationPicker lat={pos.lat} lng={pos.lng} onChange={(lat, lng) => setPos({ lat, lng })} label={t("Tadbir joyi xaritada (ixtiyoriy)")} /></div>
         <Field label={t("Qo'shimcha ma'lumot")} className="span-2" hint={t("Kishilar soni, uslub, maxsus istaklar")}>
           <Textarea rows={4} value={f.details} onChange={set("details")} maxLength={3000} />
         </Field>

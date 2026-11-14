@@ -5,7 +5,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
-import { AlertCircle, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Loader2, Star, X } from "lucide-react";
+import { AlertCircle, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Eye, EyeOff, Loader2, Star, X } from "lucide-react";
 import { mediaUrl } from "../api";
 import type { BookingStatus } from "../types";
 import { STATUS_LABEL, cx, fmtDate, initials, toISODate } from "../utils";
@@ -44,8 +44,22 @@ export function Field({ label, hint, error, children, className }:
     </label>
   );
 }
-export const Input = ({ className, ...p }: InputHTMLAttributes<HTMLInputElement>) =>
-  <input className={cx("input", className)} {...p} />;
+/** type="password" bo'lsa avtomatik «ko'z» tugmasi chiqadi (parolni ko'rsatish/yashirish) */
+export function Input({ className, type, ...p }: InputHTMLAttributes<HTMLInputElement>) {
+  const [show, setShow] = useState(false);
+  if (type === "password") {
+    return (
+      <div className="pw-wrap">
+        <input className={cx("input", className)} type={show ? "text" : "password"} {...p} />
+        <button type="button" className="pw-eye" tabIndex={-1} onClick={() => setShow((s) => !s)}
+          aria-label={show ? t("Parolni yashirish") : t("Parolni ko'rsatish")} aria-pressed={show}>
+          {show ? <EyeOff size={18} /> : <Eye size={18} />}
+        </button>
+      </div>
+    );
+  }
+  return <input className={cx("input", className)} type={type} {...p} />;
+}
 export const Textarea = ({ className, ...p }: TextareaHTMLAttributes<HTMLTextAreaElement>) =>
   <textarea className={cx("input textarea", className)} {...p} />;
 export const Select = ({ className, children, ...p }: SelectHTMLAttributes<HTMLSelectElement>) =>

@@ -17,15 +17,23 @@ export function registerSW() {
 type BIPEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> };
 let deferred: BIPEvent | null = null;
 const listeners = new Set<() => void>();
-window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferred = e as BIPEvent; listeners.forEach((l) => l()); });
-window.addEventListener("appinstalled", () => { deferred = null; listeners.forEach((l) => l()); });
+const FLAG = "pm_installed";
+const wasInstalled = () => { try { return localStorage.getItem(FLAG) === "1"; } catch { return false; } };
+const markInstalled = () => { try { localStorage.setItem(FLAG, "1"); } catch { /* */ } };
+// o'rnatilgan ilovada ochilgan bo'lsak — belgilab qo'yamiz (keyin oddiy brauzerda ham tugma chiqmaydi)
+if (isStandalone()) markInstalled();
+window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferred = e as BIPEvent; try { localStorage.removeItem(FLAG); } catch { /* */ } listeners.forEach((l) => l()); });
+window.addEventListener("appinstalled", () => { deferred = null; markInstalled(); listeners.forEach((l) => l()); });
+// Chrome (Android): o'rnatilgan bog'liq ilovani aniqlash
+(navigator as unknown as { getInstalledRelatedApps?: () => Promise<unknown[]> }).getInstalledRelatedApps?.()
+  .then((apps) => { if (apps.length) { markInstalled(); listeners.forEach((l) => l()); } }).catch(() => {});
 
-/** "Ilovani o'rnatish" tugmasi (o'rnatilgan bo'lsa ko'rinmaydi) */
-export function InstallButton({ className, variant = "secondary" }: { className?: string; variant?: "primary" | "secondary" | "ghost" }) {
+/** "Ilovani o'rnatish" tugmasi. O'rnatilgan bo'lsa (yoki ilovaning o'zida) umuman ko'rinmaydi. */
+export function InstallButton({ className, variant = "secondary", compact }: { className?: string; variant?: "primary" | "secondary" | "ghost"; compact?: boolean }) {
   const [, force] = useState(0);
   const [help, setHelp] = useState(false);
   useEffect(() => { const l = () => force((n) => n + 1); listeners.add(l); return () => { listeners.delete(l); }; }, []);
-  if (isStandalone()) return null;
+  if (isStandalone() || (wasInstalled() && !deferred)) return null;
   const click = async () => {
     if (deferred) {
       await deferred.prompt();
@@ -35,7 +43,9 @@ export function InstallButton({ className, variant = "secondary" }: { className?
   };
   return (
     <>
-      <Button variant={variant} className={className} onClick={click}><Download size={16} /> {t("Ilovani o'rnatish")}</Button>
+      {compact
+        ? <button className={`install-chip ${className ?? ""}`} onClick={click} aria-label={t("Ilovani o'rnatish")}><Download size={15} /><span>{t("O'rnatish")}</span></button>
+        : <Button variant={variant} className={className} onClick={click}><Download size={16} /> {t("Ilovani o'rnatish")}</Button>}
       <Modal open={help} onClose={() => setHelp(false)} title={t("Ilovani o'rnatish")}>
         {isIOS() ? (
           <ol className="install-steps">

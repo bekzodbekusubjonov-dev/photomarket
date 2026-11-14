@@ -9,7 +9,7 @@ import { cx, todayISO } from "../utils";
 import { t } from "../i18n";
 
 type Meta = { cities: string[]; specialties: string[] };
-const KEYS = ["q", "category", "city", "min_price", "max_price", "min_rating", "specialty", "available_on", "verified", "sort"] as const;
+const KEYS = ["q", "category", "city", "min_price", "max_price", "min_rating", "specialty", "available_on", "verified", "sort", "lat", "lng"] as const;
 
 export default function Creators() {
   const [sp, setSp] = useSearchParams();
@@ -31,7 +31,16 @@ export default function Creators() {
   const params = Object.fromEntries(KEYS.map((k) => [k, sp.get(k) ?? ""]));
   const { data, loading, error } = useAsync(
     () => api.get<Paged<C>>("/creators", { ...params, page, size: 12 }), [sp.toString()]);
-  const active = KEYS.filter((k) => k !== "sort" && k !== "q" && sp.get(k)).length;
+  const active = KEYS.filter((k) => k !== "sort" && k !== "q" && k !== "lat" && k !== "lng" && sp.get(k)).length;
+  const [geoErr, setGeoErr] = useState("");
+  const onSort = (v: string) => {
+    if (v !== "nearest") { const n = new URLSearchParams(sp); n.delete("lat"); n.delete("lng"); v && v !== "recommended" ? n.set("sort", v) : n.delete("sort"); n.delete("page"); setSp(n, { replace: true }); return; }
+    if (!navigator.geolocation) return setGeoErr(t("Brauzeringiz joylashuvni qo'llab-quvvatlamaydi"));
+    navigator.geolocation.getCurrentPosition((pos) => {
+      const n = new URLSearchParams(sp); n.set("sort", "nearest"); n.set("lat", pos.coords.latitude.toFixed(5)); n.set("lng", pos.coords.longitude.toFixed(5)); n.delete("page");
+      setGeoErr(""); setSp(n, { replace: true });
+    }, () => setGeoErr(t("Joylashuvga ruxsat berilmadi")), { timeout: 12000 });
+  };
 
   const filters = (
     <div className="filters">
@@ -84,19 +93,21 @@ export default function Creators() {
         <div>
           <div className="catalog-bar">
             <Input placeholder={t("Ism, uslub yoki shahar bo'yicha qidirish...")} value={q} onChange={(e) => setQ(e.target.value)} />
-            <Select value={params.sort || "recommended"} onChange={(e) => update("sort", e.target.value)} aria-label={t("Saralash")} className="sort">
+            <Select value={params.sort || "recommended"} onChange={(e) => onSort(e.target.value)} aria-label={t("Saralash")} className="sort">
               <option value="recommended">{t("Tavsiya etilgan")}</option>
               <option value="rating">{t("Reyting bo'yicha")}</option>
               <option value="reviews">{t("Sharhlar soni")}</option>
               <option value="price_asc">{t("Arzonroq avval")}</option>
               <option value="price_desc">{t("Qimmatroq avval")}</option>
               <option value="newest">{t("Yangi qo'shilgan")}</option>
+              <option value="nearest">{t("Menga yaqin")}</option>
             </Select>
             <Button variant="secondary" className="filter-toggle" onClick={() => setShowFilters(true)}>
               <SlidersHorizontal size={16} /> {t("Filtr")}{active ? ` (${active})` : ""}
             </Button>
           </div>
           {error && <p className="alert alert-error">{error}</p>}
+          {geoErr && <p className="alert alert-error">{geoErr}</p>}
           <div className="grid-cards cols-3">
             {loading && !data ? Array.from({ length: 6 }).map((_, i) => <CreatorCardSkeleton key={i} />) :
               data?.items.map((c) => <CreatorCard key={c.id} c={c} />)}

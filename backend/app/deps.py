@@ -1,3 +1,5 @@
+from contextvars import ContextVar
+
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
@@ -7,6 +9,7 @@ from .models import User, ROLE_ADMIN, ROLE_CREATOR
 from .security import decode_token
 
 bearer = HTTPBearer(auto_error=False)
+read_only: ContextVar[bool] = ContextVar("read_only", default=False)  # admin kuzatuv rejimi
 
 
 def _resolve(credentials, db: Session) -> User | None:

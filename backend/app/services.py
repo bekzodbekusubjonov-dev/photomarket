@@ -145,13 +145,14 @@ def creator_card(c: CreatorProfile) -> dict:
         "experience_years": c.experience_years, "avatar_url": c.user.avatar_url if c.user else "",
         "cover_url": cover, "verified": c.verified, "featured": c.featured, "active": c.active,
         "preview": [p.image_url for p in c.portfolio[:3]],
+        "lat": c.lat, "lng": c.lng,
     }
 
 
 def creator_full(c: CreatorProfile) -> dict:
     d = creator_card(c)
     d.update({
-        "bio": c.bio, "instagram": c.instagram, "telegram": c.telegram,
+        "bio": c.bio, "instagram": c.instagram, "telegram": c.telegram, "address": c.address,
         "own_cover_url": c.cover_url, "created_at": c.created_at,
         "portfolio": [portfolio_out(p) for p in c.portfolio],
         "services": [service_out(s) for s in c.services if s.active],
@@ -186,7 +187,7 @@ def booking_out(b: Booking, detail: bool = False) -> dict:
         "creator": {"id": b.creator.id, "display_name": b.creator.display_name, "user_id": b.creator.user_id,
                     "avatar_url": b.creator.user.avatar_url if b.creator.user else "", "city": b.creator.city},
         "service": {"id": b.service.id, "title": b.service.title} if b.service else None,
-        "has_review": b.review is not None,
+        "has_review": b.review is not None, "lat": b.lat, "lng": b.lng,
     }
     if detail:
         d["details"] = b.details

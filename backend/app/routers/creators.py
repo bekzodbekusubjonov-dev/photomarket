@@ -57,7 +57,9 @@ def list_creators(
     specialty: str | None = None,
     available_on: date | None = None,
     verified: bool | None = None,
-    sort: str = Query("recommended", pattern="^(recommended|rating|price_asc|price_desc|newest|reviews)$"),
+    sort: str = Query("recommended", pattern="^(recommended|rating|price_asc|price_desc|newest|reviews|nearest)$"),
+    lat: float | None = Query(None, ge=-90, le=90),
+    lng: float | None = Query(None, ge=-180, le=180),
     page: int = Query(1, ge=1),
     size: int = Query(12, ge=1, le=48),
     db: Session = Depends(get_db),
@@ -97,7 +99,22 @@ def list_creators(
         "price_desc": [CreatorProfile.price_from.desc()],
         "newest": [CreatorProfile.created_at.desc()],
         "reviews": [CreatorProfile.reviews_count.desc()],
+        "nearest": [CreatorProfile.featured.desc(), CreatorProfile.rating.desc()],
     }[sort]
+    if sort == "nearest" and lat is not None and lng is not None:
+        from ..geo import haversine_km
+        allrows = db.scalars(stmt.options(selectinload(CreatorProfile.portfolio), selectinload(CreatorProfile.user))
+                             .limit(1000)).all()
+        scored = sorted(allrows, key=lambda c: (haversine_km(lat, lng, c.lat, c.lng)
+                                               if c.lat is not None and c.lng is not None else 1e9))
+        page_rows = scored[(page - 1) * size: page * size]
+        items = []
+        for c in page_rows:
+            d = creator_card(c)
+            d["distance_km"] = (round(haversine_km(lat, lng, c.lat, c.lng), 1)
+                                if c.lat is not None and c.lng is not None else None)
+            items.append(d)
+        return {"items": items, "total": len(scored), "page": page, "pages": max(1, -(-len(scored) // size))}
     rows = db.scalars(
         stmt.options(selectinload(CreatorProfile.portfolio), selectinload(CreatorProfile.user))
         .order_by(*order, CreatorProfile.id.desc()).offset((page - 1) * size).limit(size)
@@ -191,6 +208,7 @@ def update_my_profile(data: CreatorProfileIn, user: User = Depends(require_creat
     c.instagram = data.instagram.strip().lstrip("@")
     c.telegram = data.telegram.strip().lstrip("@")
     c.active = data.active
+    c.lat, c.lng, c.address = data.lat, data.lng, data.address.strip()
     db.commit()
     return creator_full(c)
 

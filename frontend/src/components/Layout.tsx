@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Aperture, Bell, CalendarDays, ClipboardList, Heart, Home, LayoutDashboard, LogOut, Menu, MessageCircle, Search, Settings, ShieldAlert, User as UserIcon, Users, X } from "lucide-react";
+import { Bell, CalendarDays, ClipboardList, Heart, Home, LayoutDashboard, LogOut, Menu, MessageCircle, Search, Settings, ShieldAlert, User as UserIcon, Users, X } from "lucide-react";
 import { useAuth } from "../auth";
 import { ROLE_LABEL, cx } from "../utils";
 import { Avatar } from "./ui";
 import { LangSwitch } from "./LangSwitch";
+import { BrandMark } from "./Brand";
 import { InstallButton } from "../pwa";
 import { useUnread } from "./unread";
 import { t } from "../i18n";
@@ -12,8 +13,8 @@ import { t } from "../i18n";
 export function Logo() {
   return (
     <Link to="/" className="logo" aria-label={t("PhotoMarket bosh sahifa")}>
-      <span className="logo-mark"><Aperture size={18} strokeWidth={2.4} /></span>
-      <span>{t("Photo")}<b>{t("Market")}</b></span>
+      <BrandMark size={34} />
+      <span>Photo<b>Market</b></span>
     </Link>
   );
 }
@@ -69,6 +70,7 @@ export function Header() {
           {!user && <Link to="/register?role=creator" className="nav-cta-mobile">{t("Ijodkor sifatida qo'shiling")}</Link>}
         </nav>
         <div className="header-actions">
+          <InstallButton compact />
           <LangSwitch />
           {user ? (
             <>
@@ -112,7 +114,6 @@ export function Footer() {
           <Link to="/register">{t("Ro'yxatdan o'tish")}</Link>
           <Link to="/categories">{t("Kategoriyalar")}</Link>
           <Link to="/about">{t("Biz haqimizda")}</Link>
-          <InstallButton variant="ghost" className="footer-install" />
         </div>
         <div>
           <h4>{t("Ijodkorlar uchun")}</h4>

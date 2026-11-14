@@ -1,3 +1,4 @@
+import { MapCard } from "../components/Map";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { AtSign, BadgeCheck, Briefcase, CalendarCheck, Clock, MapPin, MessageCircle, Send, Sparkles } from "lucide-react";
@@ -170,6 +171,12 @@ export default function CreatorProfile() {
               )}
               <p className="muted small">{t("Platformada:")} {fmtDate(c.created_at.slice(0, 10))} {t("dan beri")}</p>
             </section>
+            {c.lat != null && c.lng != null && (
+              <section className="card">
+                <h2>{t("Joylashuv")}</h2>
+                <MapCard lat={c.lat} lng={c.lng} title={t(c.city)} address={c.address} />
+              </section>
+            )}
             <section className="card">
               <h2>{t("Bandlik kalendari")}</h2>
               <MonthCalendar compact month={month} onMonth={setMonth}

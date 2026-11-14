@@ -37,6 +37,8 @@ export function UpcomingList({ items, role }: { items: Booking[]; role: string }
   );
 }
 
+import { AdSlot } from "../../components/Ads";
+
 export default function Overview() {
   const { user } = useAuth();
   if (user?.role === "admin") return <AdminOverview />;
@@ -57,6 +59,8 @@ function UserOverview() {
         sub={isCreator ? t("Buyurtmalaringiz va profilingiz holati") : t("Buyurtmalaringiz bir joyda")}
         actions={isCreator ? <LinkButton to={`/creators/${user?.creator_id}`} variant="secondary">{t("Ommaviy profilni ko'rish")}</LinkButton>
           : <LinkButton to="/creators">{t("Ijodkor topish")} <ArrowRight size={16} /></LinkButton>} />
+
+      <AdSlot placement="dashboard" />
 
       {isCreator && prof.data && (prof.data.completeness ?? 100) < 100 && (
         <div className="card progress-card">

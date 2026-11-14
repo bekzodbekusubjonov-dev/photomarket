@@ -91,6 +91,10 @@ def send_code_email(to: str, name: str, code: str, purpose: str, lang: str = "uz
         subject = tr(lang, "{code} — {app} tasdiqlash kodi", code=code, app=settings.app_name)
         title = tr(lang, "Email manzilingizni tasdiqlang")
         lead = tr(lang, "Ro'yxatdan o'tishni yakunlash uchun quyidagi kodni kiriting:")
+    elif purpose.startswith("sign_contract"):
+        subject = tr(lang, "{code} — shartnomani imzolash kodi", code=code)
+        title = tr(lang, "Shartnomani imzolash")
+        lead = tr(lang, "Shartnomani elektron imzolash uchun quyidagi kodni kiriting:")
     else:
         subject = tr(lang, "{code} — parolni tiklash kodi", code=code)
         title = tr(lang, "Parolni tiklash")

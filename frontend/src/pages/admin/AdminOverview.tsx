@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Camera, ClipboardList, Coins, MessageCircle, ShieldAlert, Star, UserPlus, Users } from "lucide-react";
+import { Camera, ClipboardList, Coins, FileSignature, Megaphone, MessageCircle, ShieldAlert, Star, UserPlus, Users, Wallet } from "lucide-react";
 import { api } from "../../api";
 import { BarChart } from "../../components/BarChart";
 import { Avatar, PageHead, Spinner, Stars, useAsync } from "../../components/ui";
@@ -15,20 +15,34 @@ type S = {
   activity: { at: string; kind: string; text: string; link?: string }[];
 };
 
+type X = {
+  contracts: { total: number; signed: number; awaiting: number; cancelled: number; value: number; commission: number; cancel_income: number };
+  payments: { pending: number; paid_sum: number; payouts_due: number; fee_sum: number };
+  ads: { active: number; views: number; clicks: number };
+};
+
 export default function AdminOverview() {
   const { data: s, loading } = useAsync(() => api.get<S>("/admin/stats"), []);
+  const { data: x } = useAsync(() => api.get<X>("/admin/overview-extra"), []);
   if (loading || !s) return <Spinner />;
   const maxSt = Math.max(1, ...Object.values(s.bookings.by_status));
   return (
     <>
       <PageHead title={t("Admin panel")} sub={t("Platformaning umumiy holati")} />
-      <div className="stats-grid">
-        <div className="stat"><Users /><span>{t("Foydalanuvchilar")}</span><b>{s.users.total}</b><small className="muted">{s.users.by_role.client ?? 0} {t("mijoz ·")} {s.users.by_role.creator ?? 0} {t("ijodkor")}</small></div>
-        <div className="stat"><UserPlus /><span>{t("So'nggi 30 kunda")}</span><b>+{s.users.new_30d}</b><small className="muted">{s.users.unverified} {t("tasdiqlanmagan")}</small></div>
-        <div className="stat"><ClipboardList /><span>{t("Buyurtmalar")}</span><b>{s.bookings.total}</b></div>
-        <div className="stat"><Coins /><span>{t("Bajarilgan aylanma")}</span><b className="money">{fmtMoney(s.revenue)}</b></div>
-        <div className="stat"><Star /><span>{t("Sharhlar")}</span><b>{s.reviews}</b></div>
-        <div className="stat"><MessageCircle /><span>{t("Xabarlar")}</span><b>{s.messages}</b></div>
+      <div className="stats-grid stats-click">
+        <Link to="/dashboard/admin/reports/users" className="stat"><Users /><span>{t("Foydalanuvchilar")}</span><b>{s.users.total}</b><small className="muted">{s.users.by_role.client ?? 0} {t("mijoz ·")} {s.users.by_role.creator ?? 0} {t("ijodkor")}</small></Link>
+        <Link to="/dashboard/admin/reports/users?status=unverified" className="stat"><UserPlus /><span>{t("So'nggi 30 kunda")}</span><b>+{s.users.new_30d}</b><small className="muted">{s.users.unverified} {t("tasdiqlanmagan")}</small></Link>
+        <Link to="/dashboard/admin/reports/bookings" className="stat"><ClipboardList /><span>{t("Buyurtmalar")}</span><b>{s.bookings.total}</b></Link>
+        <Link to="/dashboard/admin/reports/revenue" className="stat"><Coins /><span>{t("Bajarilgan aylanma")}</span><b className="money">{fmtMoney(s.revenue)}</b></Link>
+        <Link to="/dashboard/admin/reports/reviews" className="stat"><Star /><span>{t("Sharhlar")}</span><b>{s.reviews}</b></Link>
+        <Link to="/dashboard/admin/reports/creators" className="stat"><Camera /><span>{t("Ijodkorlar")}</span><b>{s.users.by_role.creator ?? 0}</b></Link>
+        {x && <>
+          <Link to="/dashboard/admin/reports/contracts" className="stat"><FileSignature /><span>{t("Shartnomalar")}</span><b>{x.contracts.total}</b><small className="muted">{x.contracts.signed} {t("imzolangan ·")} {x.contracts.awaiting} {t("kutilmoqda")}</small></Link>
+          <Link to="/dashboard/admin/reports/payments" className="stat"><Wallet /><span>{t("To'lovlar")}</span><b className="money">{fmtMoney(x.payments.paid_sum)}</b><small className="muted">{x.payments.pending} {t("ta tasdiq kutmoqda")}</small></Link>
+          <Link to="/dashboard/admin/reports/revenue" className="stat"><Coins /><span>{t("Platforma daromadi")}</span><b className="money">{fmtMoney(x.payments.fee_sum + x.contracts.cancel_income)}</b><small className="muted">{x.payments.payouts_due} {t("ta ulush o'tkazilishi kerak")}</small></Link>
+          <Link to="/dashboard/admin/ads" className="stat"><Megaphone /><span>{t("Reklamalar")}</span><b>{x.ads.active}</b><small className="muted">{x.ads.views} {t("ko'rish ·")} {x.ads.clicks} {t("bosish")}</small></Link>
+        </>}
+        <Link to="/dashboard/complaints" className="stat"><MessageCircle /><span>{t("Xabarlar")}</span><b>{s.messages}</b></Link>
       </div>
       {s.pending_verification > 0 && (
         <Link to="/dashboard/admin/creators?verified=false" className="card progress-card link-card">

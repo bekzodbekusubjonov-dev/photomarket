@@ -25,6 +25,10 @@ services:
         sync: false
       - key: SUPABASE_BUCKET
         value: uploads
+      - key: ADMIN_EMAIL         # birinchi administrator
+        sync: false
+      - key: ADMIN_PASSWORD      # kamida 8 belgi
+        sync: false
       - key: MAIL_SCRIPT_URL     # Google Apps Script veb-ilova manzili
         sync: false
       - key: MAIL_SCRIPT_KEY

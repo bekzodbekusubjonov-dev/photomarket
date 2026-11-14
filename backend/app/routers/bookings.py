@@ -5,6 +5,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
+from ..contracts import apply_cancellation, ensure_contract, money
 from ..database import get_db
 from ..deps import get_current_user, require_roles
 from ..models import (
@@ -74,7 +75,7 @@ def create_booking(data: BookingIn, background: BackgroundTasks,
     b = Booking(client_id=user.id, creator_id=creator.id, service_id=service.id if service else None,
                 title=data.title.strip(), event_date=data.event_date, start_time=data.start_time,
                 duration_hours=data.duration_hours, location=data.location.strip(),
-                details=data.details.strip(), price=price)
+                details=data.details.strip(), price=price, lat=data.lat, lng=data.lng)
     db.add(b)
     db.flush()
     notify(db, creator.user, "booking_new", "Yangi buyurtma",
@@ -162,6 +163,7 @@ def update_booking(booking_id: int, data: BookingUpdateIn, user: User = Depends(
     check_slot_free(db, b.creator_id, data.event_date, data.start_time, data.duration_hours, b.id)
     b.title, b.event_date, b.start_time = data.title.strip(), data.event_date, data.start_time
     b.duration_hours, b.location, b.details = data.duration_hours, data.location.strip(), data.details.strip()
+    b.lat, b.lng = data.lat, data.lng
     if not b.service_id:
         b.price = data.price
     notify(db, b.creator.user, "booking_updated", "Buyurtma o'zgartirildi",
@@ -206,6 +208,19 @@ def change_status(booking_id: int, data: StatusIn, background: BackgroundTasks,
     if data.status == ST_COMPLETED:
         db.flush()
         recalc_creator_rating(db, b.creator)
+    if data.status == ST_ACCEPTED:
+        db.flush()
+        con = ensure_contract(db, b)
+        for u in (b.client, b.creator.user):
+            notify(db, u, "contract_new", f"Shartnoma {con.number} tayyor — imzolang",
+                   f"«{b.title}» buyurtmasi uchun elektron shartnoma yaratildi", f"/dashboard/contracts/{con.id}",
+                   background, email=True)
+    if data.status == ST_CANCELLED:
+        con = apply_cancellation(db, b, user.role, user.id)
+        if con and con.cancel_fee:
+            notify(db, b.creator.user, "contract_cancel_fee",
+                   f"Bekor qilish kompensatsiyasi: {money(con.cancel_to_creator)} so'm",
+                   f"Shartnoma {con.number}", f"/dashboard/contracts/{con.id}", background)
     db.commit()
     return _out(b, user)
 

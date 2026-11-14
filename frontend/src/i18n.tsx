@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { en } from "./locales/en";
 import { ru } from "./locales/ru";
+import { ru_extra } from "./locales/ru_extra";
+import { en_extra } from "./locales/en_extra";
 
 export type Lang = "uz" | "ru" | "en";
 export const LANGS: { code: Lang; label: string; short: string }[] = [
@@ -10,7 +12,7 @@ export const LANGS: { code: Lang; label: string; short: string }[] = [
 ];
 
 const KEY = "pm_lang";
-const dicts: Record<Lang, Record<string, string>> = { uz: {}, ru, en };
+const dicts: Record<Lang, Record<string, string>> = { uz: {}, ru: { ...ru, ...ru_extra }, en: { ...en, ...en_extra } };
 
 function detect(): Lang {
   try {

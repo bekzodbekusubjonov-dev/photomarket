@@ -8,5 +8,5 @@ if not exist .venv (
   call .venv\Scripts\activate.bat
 )
 if not exist .env copy .env.example .env
-python -m app.cli setup-email
+python -m app.cli setup-script
 pause

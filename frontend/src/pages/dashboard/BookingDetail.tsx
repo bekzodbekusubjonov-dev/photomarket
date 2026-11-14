@@ -10,6 +10,19 @@ import {
 import type { Booking, CreatorFull } from "../../types";
 import { fmtDate, fmtDateTime, fmtMoney, todayISO } from "../../utils";
 import { t } from "../../i18n";
+import { MapCard } from "../../components/Map";
+import { FileSignature } from "lucide-react";
+import type { Contract } from "../../types";
+
+function ContractStrip({ id }: { id: number }) {
+  const { data: c } = useAsync(() => api.get<Contract | null>(`/contracts/by-booking/${id}`).catch(() => null), [id]);
+  if (!c) return null;
+  return (
+    <Link to={`/dashboard/contracts/${c.id}`} className="card progress-card link-card">
+      <FileSignature /><div className="grow"><b>{t("Elektron shartnoma")} {c.number}</b><p className="muted small">{c.status === "signed" ? t("Ikkala tomon imzolagan") : t("Imzo kutilmoqda — ochib imzolang")}</p></div>
+    </Link>
+  );
+}
 
 export default function BookingDetail() {
   const { id } = useParams();
@@ -86,6 +99,9 @@ export default function BookingDetail() {
           ))}
         </ol>
       ) : <Alert kind="error">{b.status === "rejected" ? t("Bu buyurtma rad etilgan.") : t("Bu buyurtma bekor qilingan.")}{b.status_note && ` ${t("Izoh")}: ${b.status_note}`}</Alert>}
+
+      {(b.status === "accepted" || b.status === "completed" || b.status === "cancelled") && <ContractStrip id={b.id} />}
+      {b.lat != null && b.lng != null && <section className="card"><h2>{t("Manzilga borish")}</h2><MapCard lat={b.lat} lng={b.lng} title={b.location} /></section>}
 
       <div className="dash-grid">
         <section className="card">

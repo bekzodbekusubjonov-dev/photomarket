@@ -32,9 +32,10 @@ def verify_password(password: str, password_hash: str) -> bool:
         return False
 
 
-def create_access_token(user_id: int, role: str, token_version: int) -> str:
-    exp = datetime.now(timezone.utc) + timedelta(minutes=settings.jwt_expire_minutes)
-    payload = {"sub": str(user_id), "role": role, "tv": token_version, "exp": exp}
+def create_access_token(user_id: int, role: str, token_version: int, extra: dict | None = None,
+                        minutes: int | None = None) -> str:
+    exp = datetime.now(timezone.utc) + timedelta(minutes=minutes or settings.jwt_expire_minutes)
+    payload = {"sub": str(user_id), "role": role, "tv": token_version, "exp": exp, **(extra or {})}
     return jwt.encode(payload, settings.jwt_secret, algorithm=ALGORITHM)
 
 

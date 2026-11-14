@@ -154,3 +154,9 @@ frontend/src/
 - Ijodkorlar uchun "Tavsiya" (featured) joylashuvi — oylik obuna
 - Har bir bajarilgan buyurtmadan komissiya (Payme/Click integratsiyasi keyingi bosqich)
 - "Tasdiqlangan" belgisi uchun tekshiruv xizmati
+
+## Yangi imkoniyatlar (v2)
+- **Elektron shartnoma**: buyurtma qabul qilinganda avtomatik (PM-YYYY-######), 12 band (uz/ru/en), platforma ulushi va bekor qilishda ushlab qolish qoidalari, ikki tomon imzosi (email kodi + chizilgan imzo), SHA-256 xesh, ommaviy tekshiruv `/check/<raqam>`.
+- **To'lov va chek**: karta/o'tkazma — chek (skrinshot) yuklanadi, admin tasdiqlaydi → elektron chek (`CHK-YYMMDD-######`) ikkala tomonga bildirishnoma va email bilan boradi.
+- **Bank kartalari** (faqat boshi/oxirgi 4 raqam saqlanadi), **xarita va joylashuv**, **e'lon/reklama**, **admin hisobotlari** (bosiladigan), **foydalanuvchi ko'zi bilan ko'rish** (faqat o'qish).
+- Render'da `ADMIN_EMAIL`, `ADMIN_PASSWORD` qo'shing; demo: `python -m app.cli seed-demo`, o'chirish: `remove-demo`.

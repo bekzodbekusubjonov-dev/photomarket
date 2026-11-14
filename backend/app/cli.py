@@ -118,12 +118,18 @@ def seed_demo():
                                description=f"{title}. Tahrirlangan suratlar/video 7–14 kun ichida topshiriladi."))
             n += 1
         db.commit()
+        from .demo_extra import seed_activity
+        seed_activity(db)
     print(f"{n} ta demo ijodkor qo'shildi. Kirish: demo1@{DEMO_DOMAIN} ... parol: Demo12345")
+    print(f"Demo mijozlar: democlient1@{DEMO_DOMAIN} ... democlient4@{DEMO_DOMAIN} (parol: Demo12345)")
     print("Eslatma: bu namunaviy profillar. Saytni haqiqiy ishga tushirishdan oldin: python -m app.cli remove-demo")
 
 
 def remove_demo():
     with SessionLocal() as db:
+        from .models import Ad
+        for ad in db.scalars(select(Ad).where(Ad.advertiser.like("%(demo)"))):
+            db.delete(ad)
         users = db.scalars(select(User).where(User.email.like(f"%@{DEMO_DOMAIN}"))).all()
         for u in users:
             db.delete(u)

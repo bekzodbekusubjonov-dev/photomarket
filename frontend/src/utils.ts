@@ -97,6 +97,9 @@ export const COMPLAINT_REASON_LABEL = labelMap({
   quality: "Sifat past", no_show: "Kelmadi", price: "Narx bo'yicha nizo", rude: "Muomala yomon", fraud: "Firibgarlik", other: "Boshqa",
 }) as Record<string, string>;
 
+export const CONTRACT_STATUS_LABEL = labelMap({ awaiting: "Imzo kutilmoqda", signed: "Imzolangan", cancelled: "Bekor qilingan", void: "Bekor (imzosiz)" }) as Record<string, string>;
+export const CARD_BRAND_LABEL: Record<string, string> = { uzcard: "UZCARD", humo: "HUMO", visa: "VISA", mastercard: "Mastercard", card: "" };
+
 export const initials = (name: string) =>
   name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join("") || "?";
 

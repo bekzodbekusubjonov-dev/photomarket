@@ -3,7 +3,7 @@ from sqlalchemy import and_, case, func, or_, select, update
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..deps import get_current_user
+from ..deps import get_current_user, read_only
 from ..models import Booking, Message, Notification, User, ROLE_ADMIN, ROLE_CLIENT, ROLE_CREATOR
 from ..ratelimit import limit
 from ..schemas import MessageIn
@@ -83,9 +83,10 @@ def thread(other_id: int, after_id: int = Query(0, ge=0), user: User = Depends(g
         msgs = list(db.scalars(stmt))
     else:
         msgs = list(reversed(db.scalars(stmt.order_by(Message.id.desc()).limit(200)).all()))
-    db.execute(update(Message).where(Message.sender_id == other.id, Message.recipient_id == user.id,
-                                     Message.is_read.is_(False)).values(is_read=True))
-    db.commit()
+    if not read_only.get():
+        db.execute(update(Message).where(Message.sender_id == other.id, Message.recipient_id == user.id,
+                                         Message.is_read.is_(False)).values(is_read=True))
+        db.commit()
     pub = user_public(other)
     if other.creator_profile:
         pub["creator_id"] = other.creator_profile.id

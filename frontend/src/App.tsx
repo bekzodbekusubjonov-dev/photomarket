@@ -34,6 +34,13 @@ const Calendar = lazy(() => import("./pages/creator/Calendar"));
 const Reviews = lazy(() => import("./pages/creator/Reviews"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const AdminCreators = lazy(() => import("./pages/admin/AdminCreators"));
+const Contracts = lazy(() => import("./pages/dashboard/Contracts"));
+const ContractView = lazy(() => import("./pages/dashboard/ContractView"));
+const Cards = lazy(() => import("./pages/dashboard/Cards"));
+const ReceiptPage = lazy(() => import("./pages/dashboard/Receipt"));
+const ContractCheck = lazy(() => import("./pages/Verify"));
+const AdminReport = lazy(() => import("./pages/admin/AdminReport"));
+const AdminAds = lazy(() => import("./pages/admin/AdminAds"));
 const AdminReviews = lazy(() => import("./pages/admin/AdminReviews"));
 
 export default function App() {
@@ -53,6 +60,7 @@ export default function App() {
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
         <Route path="verify" element={<Verify />} />
+        <Route path="check/:number" element={<ContractCheck />} />
         <Route path="forgot-password" element={<Forgot />} />
         <Route path="dashboard" element={<RequireAuth><DashboardLayout /></RequireAuth>}>
           <Route index element={<Overview />} />
@@ -69,6 +77,12 @@ export default function App() {
           <Route path="reviews" element={<RequireAuth roles={["creator", "client"]}><Reviews /></RequireAuth>} />
           <Route path="favorites" element={<RequireAuth roles={["client"]}><Favorites /></RequireAuth>} />
           <Route path="payments" element={<Payments />} />
+          <Route path="payments/:id/receipt" element={<ReceiptPage />} />
+          <Route path="contracts" element={<Contracts />} />
+          <Route path="contracts/:id" element={<ContractView />} />
+          <Route path="cards" element={<RequireAuth roles={["creator", "client"]}><Cards /></RequireAuth>} />
+          <Route path="admin/reports/:kind" element={<RequireAuth roles={["admin"]}><AdminReport /></RequireAuth>} />
+          <Route path="admin/ads" element={<RequireAuth roles={["admin"]}><AdminAds /></RequireAuth>} />
           <Route path="complaints" element={<RequireAuth roles={["client", "admin"]}><Complaints /></RequireAuth>} />
           <Route path="earnings" element={<RequireAuth roles={["creator"]}><Earnings /></RequireAuth>} />
           <Route path="admin/categories" element={<RequireAuth roles={["admin"]}><AdminCategories /></RequireAuth>} />

@@ -24,7 +24,7 @@ export function CreatorCard({ c }: { c: C }) {
           <Avatar src={c.avatar_url} name={c.display_name} size={44} className="cc-avatar" />
           <div className="cc-name">
             <h3>{c.display_name} {c.verified && <BadgeCheck size={16} className="verified" aria-label={t("Tasdiqlangan")} />}</h3>
-            <span className="muted small"><MapPin size={13} /> {t(c.city)}{c.experience_years ? ` · ${t("{n} yil tajriba",{n:c.experience_years})}` : ""}</span>
+            <span className="muted small"><MapPin size={13} /> {t(c.city)}{c.distance_km != null ? ` · ${c.distance_km} ${t("km")}` : ""}{c.experience_years ? ` · ${t("{n} yil tajriba",{n:c.experience_years})}` : ""}</span>
           </div>
         </div>
         {c.specialties.length > 0 && (

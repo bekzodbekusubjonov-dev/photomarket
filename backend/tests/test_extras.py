@@ -44,7 +44,7 @@ def test_favorites_payments_complaints_admin(client):
     r = client.post("/api/payments", headers=mh, json={"booking_id": b["id"], "amount": 100000})
     assert r.status_code == 400
     assert client.post(f"/api/bookings/{b['id']}/status", headers=ch, json={"status": "accepted"}).status_code == 200
-    r = client.post("/api/payments", headers=mh, json={"booking_id": b["id"], "amount": 300000, "method": "card"})
+    r = client.post("/api/payments", headers=mh, json={"booking_id": b["id"], "amount": 300000, "method": "cash"})
     assert r.status_code == 200 and r.json()["status"] == "pending"
     pid = r.json()["id"]
     assert client.patch(f"/api/payments/{pid}", headers=mh, json={"status": "paid"}).status_code == 403

@@ -14,6 +14,8 @@ import type { CreatorCard as C, Paged } from "../types";
 import { todayISO } from "../utils";
 import { t } from "../i18n";
 
+import { AdSlot } from "../components/Ads";
+
 export default function Home() {
   const nav = useNavigate();
   const site = useSite();
@@ -70,7 +72,7 @@ export default function Home() {
           <div className="hero-trust">
             <span><ShieldCheck size={16} /> {t("Email bilan tasdiqlangan hisoblar")}</span>
             <span><BadgeCheck size={16} /> {t("Admin tekshirgan ijodkorlar")}</span>
-            <span><CheckCircle2 size={16} /> {t("Buyurtma — komissiyasiz")}</span>
+            <span><CheckCircle2 size={16} /> {t("Buyurtma — shartnoma va chek bilan")}</span>
           </div>
         </div>
         <div className="container">
@@ -83,6 +85,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      <div className="container"><AdSlot placement="home" /></div>
 
       <section className="container">
         <div className="stats-strip">

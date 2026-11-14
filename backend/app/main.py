@@ -14,7 +14,9 @@ from . import models  # noqa: F401  (jadvallarni ro'yxatdan o'tkazish)
 from .config import BASE_DIR, settings
 from .database import Base, engine, ensure_columns
 from .i18n import current_lang, pick_lang, translate_text, tr
-from .routers import admin, auth, bookings, creators, dashboard, extras, messages, notifications, site
+from .deps import read_only
+from .routers import admin, auth, bookings, creators, dashboard, extras, features, messages, notifications, site
+from .security import decode_token
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("photomarket")
@@ -106,6 +108,15 @@ async def http_handler(_req: Request, exc: StarletteHTTPException):
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
     current_lang.set(pick_lang(request.headers.get("accept-language"), settings.default_lang))
+    ro = False
+    auth = request.headers.get("authorization", "")
+    if auth[:7].lower() == "bearer ":
+        payload = decode_token(auth[7:])
+        ro = bool(payload and payload.get("ro"))
+    read_only.set(ro)
+    if ro and request.method not in ("GET", "HEAD", "OPTIONS"):  # admin kuzatuv rejimi: faqat ko'rish
+        return JSONResponse(status_code=403, content={
+            "detail": translate_text(current_lang.get(), "Kuzatuv rejimida faqat ko'rish mumkin")})
     resp = await call_next(request)
     resp.headers.setdefault("X-Content-Type-Options", "nosniff")
     resp.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
@@ -114,7 +125,8 @@ async def security_headers(request: Request, call_next):
 
 
 for r in (auth.router, creators.router, creators.me, bookings.router, bookings.reviews, messages.router,
-          notifications.router, dashboard.router, admin.router, extras.router, extras.admin, site.router):
+          notifications.router, dashboard.router, admin.router, extras.router, extras.admin, features.router,
+          features.admin, site.router):
     app.include_router(r)
 
 

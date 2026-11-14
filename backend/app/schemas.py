@@ -78,6 +78,9 @@ class CreatorProfileIn(BaseModel):
     instagram: str = Field(default="", max_length=120)
     telegram: str = Field(default="", max_length=120)
     active: bool = True
+    lat: float | None = Field(default=None, ge=-90, le=90)
+    lng: float | None = Field(default=None, ge=-180, le=180)
+    address: str = Field(default="", max_length=255)
 
     @field_validator("specialties")
     @classmethod
@@ -118,6 +121,8 @@ class BookingUpdateIn(BaseModel):
     location: str = Field(min_length=2, max_length=255)
     details: str = Field(default="", max_length=3000)
     price: int | None = Field(default=None, ge=0, le=1_000_000_000)
+    lat: float | None = Field(default=None, ge=-90, le=90)
+    lng: float | None = Field(default=None, ge=-180, le=180)
 
     @field_validator("start_time")
     @classmethod

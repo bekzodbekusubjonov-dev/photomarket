@@ -84,6 +84,9 @@ class CreatorProfile(Base):
     verified: Mapped[bool] = mapped_column(Boolean, default=False)
     featured: Mapped[bool] = mapped_column(Boolean, default=False)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
+    lat: Mapped[float | None] = mapped_column(Float, nullable=True)
+    lng: Mapped[float | None] = mapped_column(Float, nullable=True)
+    address: Mapped[str] = mapped_column(String(255), default="")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
 
@@ -150,6 +153,8 @@ class Booking(Base):
     price: Mapped[int | None] = mapped_column(Integer, nullable=True)
     status: Mapped[str] = mapped_column(String(20), default=ST_PENDING, index=True)
     status_note: Mapped[str] = mapped_column(String(500), default="")
+    lat: Mapped[float | None] = mapped_column(Float, nullable=True)
+    lng: Mapped[float | None] = mapped_column(Float, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
 
@@ -228,6 +233,14 @@ class Payment(Base):
     created_by: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     confirmed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    proof_url: Mapped[str] = mapped_column(String(500), default="")      # mijoz yuklagan chek/skrinshot
+    card_id: Mapped[int | None] = mapped_column(Integer, nullable=True)   # mijozning saqlangan kartasi
+    receipt_no: Mapped[str] = mapped_column(String(30), default="")
+    fee: Mapped[int] = mapped_column(Integer, default=0)                   # platforma ulushi
+    creator_amount: Mapped[int] = mapped_column(Integer, default=0)        # ijodkorga o'tadigan qism
+    payout_status: Mapped[str] = mapped_column(String(10), default="none")  # none | pending | sent
+    admin_note: Mapped[str] = mapped_column(String(300), default="")
+    confirmed_by: Mapped[int] = mapped_column(Integer, default=0)
     booking: Mapped[Booking] = relationship()
 
 
@@ -267,3 +280,78 @@ class Setting(Base):
     __tablename__ = "settings"
     key: Mapped[str] = mapped_column(String(60), primary_key=True)
     value: Mapped[str] = mapped_column(Text, default="")
+
+
+CONTRACT_AWAITING, CONTRACT_SIGNED, CONTRACT_CANCELLED, CONTRACT_VOID = "awaiting", "signed", "cancelled", "void"
+
+
+class Contract(Base):
+    """Elektron shartnoma (mijoz–ijodkor, platforma kafil). Matn kategoriya bo'yicha shablondan yig'iladi."""
+    __tablename__ = "contracts"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    number: Mapped[str] = mapped_column(String(30), unique=True, index=True)
+    booking_id: Mapped[int] = mapped_column(ForeignKey("bookings.id", ondelete="CASCADE"), unique=True)
+    client_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    creator_id: Mapped[int] = mapped_column(ForeignKey("creator_profiles.id", ondelete="CASCADE"), index=True)
+    category: Mapped[str] = mapped_column(String(20), default="photographer", index=True)
+    title: Mapped[str] = mapped_column(String(160), default="")
+    price: Mapped[int] = mapped_column(Integer, default=0)
+    commission_percent: Mapped[int] = mapped_column(Integer, default=0)
+    platform_fee: Mapped[int] = mapped_column(Integer, default=0)
+    creator_amount: Mapped[int] = mapped_column(Integer, default=0)
+    cancel_free_days: Mapped[int] = mapped_column(Integer, default=3)
+    cancel_fee_percent: Mapped[int] = mapped_column(Integer, default=30)
+    cancel_platform_share: Mapped[int] = mapped_column(Integer, default=40)
+    status: Mapped[str] = mapped_column(String(12), default=CONTRACT_AWAITING, index=True)
+    doc_hash: Mapped[str] = mapped_column(String(64), default="")
+    client_signed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    client_sign_name: Mapped[str] = mapped_column(String(140), default="")
+    client_signature: Mapped[str] = mapped_column(Text, default="")
+    client_sign_ip: Mapped[str] = mapped_column(String(64), default="")
+    creator_signed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    creator_sign_name: Mapped[str] = mapped_column(String(140), default="")
+    creator_signature: Mapped[str] = mapped_column(Text, default="")
+    creator_sign_ip: Mapped[str] = mapped_column(String(64), default="")
+    cancelled_by: Mapped[int] = mapped_column(Integer, default=0)
+    cancelled_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    cancel_fee: Mapped[int] = mapped_column(Integer, default=0)
+    cancel_to_platform: Mapped[int] = mapped_column(Integer, default=0)
+    cancel_to_creator: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+    booking: Mapped[Booking] = relationship()
+    client: Mapped[User] = relationship(foreign_keys=[client_id])
+    creator: Mapped[CreatorProfile] = relationship(foreign_keys=[creator_id])
+
+
+class SavedCard(Base):
+    """Bank kartasi: faqat maskalangan ko'rinish saqlanadi (to'liq raqam va CVV hech qachon saqlanmaydi)."""
+    __tablename__ = "saved_cards"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    holder: Mapped[str] = mapped_column(String(80), default="")
+    brand: Mapped[str] = mapped_column(String(12), default="card")
+    first4: Mapped[str] = mapped_column(String(4), default="")
+    last4: Mapped[str] = mapped_column(String(4), default="")
+    exp: Mapped[str] = mapped_column(String(5), default="")
+    is_default: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+class Ad(Base):
+    """E'lon / reklama bannerlari (admin boshqaradi)."""
+    __tablename__ = "ads"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    title: Mapped[str] = mapped_column(String(140))
+    text: Mapped[str] = mapped_column(String(400), default="")
+    image_url: Mapped[str] = mapped_column(String(500), default="")
+    link_url: Mapped[str] = mapped_column(String(500), default="")
+    advertiser: Mapped[str] = mapped_column(String(120), default="")
+    placement: Mapped[str] = mapped_column(String(12), default="home", index=True)  # home | dashboard | creators
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    starts_on: Mapped[date | None] = mapped_column(Date, nullable=True)
+    ends_on: Mapped[date | None] = mapped_column(Date, nullable=True)
+    views: Mapped[int] = mapped_column(Integer, default=0)
+    clicks: Mapped[int] = mapped_column(Integer, default=0)
+    position: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)

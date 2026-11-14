@@ -1,10 +1,11 @@
 import { Navigate, NavLink, Outlet, useLocation } from "react-router-dom";
 import {
   BarChart3, Bell, CalendarDays, Camera, ClipboardList, CreditCard, Heart, Images, LayoutDashboard, MessageCircle, Package, Search,
-  Settings, ShieldAlert, ShieldCheck, SlidersHorizontal, Star, Tags, UserCircle, Users, Wallet,
+  FileSignature, Megaphone, PieChart, Settings, ShieldAlert, ShieldCheck, SlidersHorizontal, Star, Tags, UserCircle, Users, Wallet,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useAuth } from "../../auth";
+import { ViewAsBanner } from "../../components/ViewAs";
 import { BottomNav, Header } from "../../components/Layout";
 import { Spinner } from "../../components/ui";
 import { useUnread } from "../../components/unread";
@@ -39,12 +40,16 @@ export default function DashboardLayout() {
     { to: "/dashboard/calendar", label: t("Bandlik kalendari"), icon: <CalendarDays size={18} /> },
     { to: "/dashboard/earnings", label: t("Daromad"), icon: <Wallet size={18} /> },
     { to: "/dashboard/payments", label: t("To'lovlar tarixi"), icon: <CreditCard size={18} /> },
+    { to: "/dashboard/contracts", label: t("Shartnomalar"), icon: <FileSignature size={18} /> },
+    { to: "/dashboard/cards", label: t("Bank kartalarim"), icon: <CreditCard size={18} /> },
     { to: "/dashboard/reviews", label: t("Sharhlar"), icon: <Star size={18} /> },
   ];
   const client: Item[] = [
     { to: "/dashboard/calendar", label: t("Kalendar"), icon: <CalendarDays size={18} /> },
     { to: "/dashboard/favorites", label: t("Sevimlilar"), icon: <Heart size={18} /> },
     { to: "/dashboard/payments", label: t("To'lovlar tarixi"), icon: <CreditCard size={18} /> },
+    { to: "/dashboard/contracts", label: t("Shartnomalar"), icon: <FileSignature size={18} /> },
+    { to: "/dashboard/cards", label: t("Bank kartalarim"), icon: <CreditCard size={18} /> },
     { to: "/dashboard/reviews", label: t("Mening sharhlarim"), icon: <Star size={18} /> },
     { to: "/dashboard/complaints", label: t("Shikoyatlar"), icon: <ShieldAlert size={18} /> },
     { to: "/creators", label: t("Ijodkor topish"), icon: <Search size={18} /> },
@@ -55,6 +60,9 @@ export default function DashboardLayout() {
     { to: "/dashboard/admin/reviews", label: t("Sharhlar moderatsiyasi"), icon: <ShieldCheck size={18} /> },
     { to: "/dashboard/admin/categories", label: t("Kategoriyalar"), icon: <Tags size={18} /> },
     { to: "/dashboard/payments", label: t("To'lovlar tarixi"), icon: <CreditCard size={18} /> },
+    { to: "/dashboard/contracts", label: t("Shartnomalar"), icon: <FileSignature size={18} /> },
+    { to: "/dashboard/admin/reports/revenue", label: t("Hisobotlar"), icon: <PieChart size={18} /> },
+    { to: "/dashboard/admin/ads", label: t("E'lon va reklamalar"), icon: <Megaphone size={18} /> },
     { to: "/dashboard/complaints", label: t("Shikoyatlar"), icon: <ShieldAlert size={18} /> },
     { to: "/dashboard/admin/analytics", label: t("Tahlil"), icon: <BarChart3 size={18} /> },
     { to: "/dashboard/admin/settings", label: t("Platforma sozlamalari"), icon: <SlidersHorizontal size={18} /> },
@@ -67,6 +75,7 @@ export default function DashboardLayout() {
 
   return (
     <>
+      <ViewAsBanner />
       <Header />
       <div className="dash">
         <aside className="dash-side">

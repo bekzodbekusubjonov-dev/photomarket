@@ -5,6 +5,7 @@ import { api } from "../../api";
 import { useAuth } from "../../auth";
 import { Alert, Avatar, Button, Field, Img, Input, PageHead, Select, Spinner, Textarea, useToast } from "../../components/ui";
 import type { CreatorFull, User } from "../../types";
+import { LocationPicker } from "../../components/Map";
 import { cx } from "../../utils";
 import { t } from "../../i18n";
 
@@ -18,7 +19,8 @@ export default function ProfileEdit() {
   const [c, setC] = useState<CreatorFull | null>(null);
   const [specs, setSpecs] = useState<string[]>([]);
   const [f, setF] = useState({ display_name: "", category: "photographer", city: "Toshkent", price_from: "0", bio: "",
-    experience_years: "0", instagram: "", telegram: "", active: true, specialties: [] as string[] });
+    experience_years: "0", instagram: "", telegram: "", active: true, specialties: [] as string[],
+    lat: null as number | null, lng: null as number | null, address: "" });
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState("");
   const avRef = useRef<HTMLInputElement>(null);
@@ -28,7 +30,8 @@ export default function ProfileEdit() {
     api.get<CreatorFull>("/creator/profile").then((d) => {
       setC(d);
       setF({ display_name: d.display_name, category: d.category, city: d.city, price_from: String(d.price_from), bio: d.bio,
-        experience_years: String(d.experience_years), instagram: d.instagram, telegram: d.telegram, active: d.active, specialties: d.specialties });
+        experience_years: String(d.experience_years), instagram: d.instagram, telegram: d.telegram, active: d.active, specialties: d.specialties,
+        lat: d.lat ?? null, lng: d.lng ?? null, address: d.address ?? "" });
     });
     api.get<{ specialties: string[] }>("/creators/meta").then((m) => setSpecs(m.specialties)).catch(() => {});
   }, []);
@@ -93,6 +96,8 @@ export default function ProfileEdit() {
         <Field label={t("O'zingiz haqingizda")} className="span-2" hint={`${f.bio.length}/3000 · Uslubingiz, texnikangiz, topshirish muddati`}>
           <Textarea rows={5} maxLength={3000} value={f.bio} onChange={(e) => setF({ ...f, bio: e.target.value })} />
         </Field>
+        <Field label={t("Manzil (studiya yoki ish joyi)")} className="span-2"><Input maxLength={255} value={f.address} onChange={(e) => setF({ ...f, address: e.target.value })} placeholder={t("Ko'cha, mo'ljal")} /></Field>
+        <div className="span-2"><LocationPicker lat={f.lat} lng={f.lng} city={f.city} onChange={(lat, lng) => setF((o) => ({ ...o, lat, lng }))} label={t("Hududingiz xaritada")} /></div>
         <div className="span-2">
           <span className="field-label">{t("Yo'nalishlar (ko'pi bilan 12)")}</span>
           <div className="chips selectable">

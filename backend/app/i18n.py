@@ -153,6 +153,10 @@ M: dict[str, tuple[str, str]] = {
     "Ko'rish": ("Открыть", "View"),
 }
 
+from .i18n_extra import M2  # noqa: E402
+
+M.update(M2)
+
 # kalit -> (ru, en) lug'ati tezkor qidiruv uchun
 _RE_CACHE: list[tuple[re.Pattern, str]] = []
 
