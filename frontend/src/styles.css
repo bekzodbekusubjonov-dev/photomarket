@@ -1195,27 +1195,14 @@ button.chip:hover { border-color: var(--accent); }
 .mini-eye { border: 0; background: transparent; color: var(--muted); cursor: pointer; padding: 4px; border-radius: 6px; }
 .mini-eye:hover { color: var(--accent-ink); background: var(--accent-soft); }
 
-/* ===== Telefon: jadvallar kartochka ko'rinishida ===== */
-@media (max-width: 640px) {
-  .table-wrap { overflow: visible; background: transparent; border: 0; box-shadow: none; }
-  .table-wrap.card { background: transparent; border: 0; box-shadow: none; }
-  .table { min-width: 0 !important; width: 100% !important; table-layout: auto !important; display: block; }
-  .table thead { display: none; }
-  .table tbody { display: grid; gap: 10px; }
-  .table tr { display: block; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px; box-shadow: var(--shadow); }
-  .table td { display: flex !important; justify-content: space-between; align-items: center; gap: 12px; width: auto !important; padding: 7px 0 !important; border: 0 !important; text-align: right; min-width: 0 !important; overflow-wrap: anywhere; }
-  .table td + td { border-top: 1px dashed var(--line) !important; }
-  .table td::before { content: attr(data-label); flex: none; max-width: 42%; color: var(--muted); font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; text-align: left; }
-  .table td[data-label=""]::before { display: none; }
-  .table td.user-cell { text-align: left; }
-  .table td.user-cell::before { display: none; }
-  .table td.user-cell > div { min-width: 0; }
-  .table td .btn, .table td select { max-width: 100%; }
-  .table td.actions-cell, .table td.nowrap:last-child { justify-content: flex-start; flex-wrap: wrap; }
-  .table td.nowrap { white-space: normal; }
-  .col-grip { display: none; }
+/* ===== Telefon: jadval Excel kabi qoladi, chapga-o'ngga suriladi ===== */
+@media (max-width: 900px) {
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+  .table { min-width: 760px; }
+  .table td.user-cell, .table th:first-child { min-width: 240px; }
+  .col-grip { width: 16px; }
 }
-@media (max-width: 640px) { .pw-cell { justify-items: end; } .table td:last-child:empty { display: none !important; } }
+.table-wrap { position: relative; }
 @media (max-width: 420px) {
   .header-inner { gap: 6px !important; }
   .header-actions { gap: 6px; }
@@ -1228,3 +1215,5 @@ button.chip:hover { border-color: var(--accent); }
 .date-field { height: 48px; box-sizing: border-box; }
 .date-field { height: 48px !important; min-height: 48px !important; max-height: 48px !important; padding-top: 0 !important; padding-bottom: 0 !important; }
 @media (max-width: 400px) { .header-inner .logo > span { display: none; } }
+.table td.user-cell .muted { white-space: nowrap; overflow-wrap: normal; word-break: normal; }
+.table td.user-cell { min-width: 300px; }
